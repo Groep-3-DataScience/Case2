@@ -202,6 +202,11 @@ if selected_cities:
     elif visualization_option == "Precipitation":
         # Plot precipitation for each city (even if it's 0mm)
         ax2 = ax1.twinx()
+
+        # Set the range for precipitation Y-axis to be consistent on both sides
+        ax1.set_ylim(0, df_selected_cities['neersl'].max() + 1)
+        ax2.set_ylim(0, df_selected_cities['neersl'].max() + 1)
+
         for city in selected_cities:
             city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
@@ -220,6 +225,9 @@ if selected_cities:
             ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='-', marker='x')
 
         ax2.tick_params(axis='y', labelcolor='tab:blue')
+
+    # Format the time on the x-axis in military format (24-hour)
+    ax1.set_xticklabels([t.strftime('%H:%M') for t in sorted(df_selected_cities["tijd"].dropna().unique())])
 
     # Add title and show plot
     plt.title(f"{visualization_option} Comparison")
