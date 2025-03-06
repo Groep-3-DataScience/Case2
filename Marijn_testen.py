@@ -174,50 +174,48 @@ nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
 
-# Plot temperature and precipitation graphs
+# Plot temperature and precipitation graphs based on selected visualization
 if selected_cities:
-    # Create subplots for comparison
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
-    # Loop through selected cities to plot the data for each city
-    for city in selected_cities:
-        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
-
-        # Ensure time is sorted correctly
-        city_data = city_data.sort_values('tijd')
-
-        # Interpolation for missing temperature values (linear interpolation)
-        city_data['temp'] = city_data['temp'].interpolate(method='linear')
-
+    if visualization_option == "Temperature":
         # Plot temperature for each city
-        ax1.set_xlabel('Time')
-        ax1.set_ylabel('Temperature (°C)', color='tab:red')
-        ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
+        for city in selected_cities:
+            city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-    ax1.tick_params(axis='y', labelcolor='tab:red')
+            # Ensure time is sorted correctly
+            city_data = city_data.sort_values('tijd')
 
-    # Plot precipitation for each city on the same graph (only for valid precipitation values)
-    ax2 = ax1.twinx()
-    for city in selected_cities:
-        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
+            # Interpolation for missing temperature values (linear interpolation)
+            city_data['temp'] = city_data['temp'].interpolate(method='linear')
 
-        # Interpolation for missing precipitation values (linear interpolation)
-        city_data['neersl'] = city_data['neersl'].interpolate(method='linear')
+            # Plot temperature for each city
+            ax1.set_xlabel('Time')
+            ax1.set_ylabel('Temperature (°C)', color='tab:red')
+            ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
 
-        # Replace zero precipitation values with NaN to avoid breaking lines
-        city_data['neersl'] = city_data['neersl'].replace(0, np.nan)
+        ax1.tick_params(axis='y', labelcolor='tab:red')
 
+    elif visualization_option == "Precipitation":
         # Plot precipitation for each city
-        ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='-', marker='x')
+        ax2 = ax1.twinx()
+        for city in selected_cities:
+            city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-    ax2.tick_params(axis='y', labelcolor='tab:blue')
+            # Interpolation for missing precipitation values (linear interpolation)
+            city_data['neersl'] = city_data['neersl'].interpolate(method='linear')
+
+            # Replace zero precipitation values with NaN to avoid breaking lines
+            city_data['neersl'] = city_data['neersl'].replace(0, np.nan)
+
+            # Plot precipitation for each city
+            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='-', marker='x')
+
+        ax2.tick_params(axis='y', labelcolor='tab:blue')
 
     # Add title and show plot
-    plt.title(f"Temperature and Precipitation Comparison")
-    
-    # Move the legend to the right
-    fig.legend(loc='upper left', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
-    
+    plt.title(f"{visualization_option} Comparison")
+    fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
