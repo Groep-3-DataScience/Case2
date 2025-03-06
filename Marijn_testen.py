@@ -223,5 +223,3 @@ if selected_cities and visualization_option != "Weather":  # Only show graph if 
     fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
-
-
