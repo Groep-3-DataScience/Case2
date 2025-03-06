@@ -100,6 +100,29 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
+# Function to create weather map
+def create_map(df, title, selected_hour):
+    map_center = [52.3676, 4.9041]  # Centered on the Netherlands
+    m = folium.Map(location=map_center, zoom_start=7)
+
+    df_filtered = df[df["tijd"] == selected_hour]
+
+    for _, row in df_filtered.iterrows():
+        city = row["plaats"]
+        lat, lon = row["lat"], row["lon"]
+        weather = row["samenv"]  # Weather description
+
+        if city in city_coords and lat and lon:
+            icon_url = BASE_ICON_URL + weather_icons.get(weather, "zonnig.png")
+            icon = CustomIcon(icon_url, icon_size=(50, 50))
+            folium.Marker(
+                location=[lat, lon],
+                popup=f"{city}: {weather}",
+                icon=icon
+            ).add_to(m)
+
+    return m
+
 # Layout for map and graph
 col1, col2 = st.columns([1, 1])
 
