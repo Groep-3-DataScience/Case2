@@ -47,10 +47,16 @@ def fetch_weather_data():
 # Fetch the weather data and store the result in variables
 liveweer, wk_verw, uur_verw, api_data = fetch_weather_data()
 
-df_liveweer = pd.DataFrame(liveweer)
-df_wk_verw = pd.DataFrame(wk_verw)
-df_uur_verw = pd.DataFrame(uur_verw)
-df_api_data = pd.DataFrame(api_data)
+# Apply caching to data transformation functions
+@st.cache_data
+def create_dataframe(liveweer, wk_verw, uur_verw, api_data):
+    df_liveweer = pd.DataFrame(liveweer)
+    df_wk_verw = pd.DataFrame(wk_verw)
+    df_uur_verw = pd.DataFrame(uur_verw)
+    df_api_data = pd.DataFrame(api_data)
+    return df_liveweer, df_wk_verw, df_uur_verw, df_api_data
+
+df_liveweer, df_wk_verw, df_uur_verw, df_api_data = create_dataframe(liveweer, wk_verw, uur_verw, api_data)
 
 # Apply caching to the function that processes hourly data
 @st.cache_data
