@@ -1,3 +1,4 @@
+
 import requests
 import pandas as pd
 import streamlit as st
@@ -98,20 +99,24 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# Multi-select for cities
-selected_cities = st.multiselect("Selecteer steden", cities)
+# Checkbox interface for cities
+selected_cities = [city for city in cities if st.checkbox(city, value=True)]
+
+# If no cities are selected, show a message
+if not selected_cities:
+    st.warning("Select at least one city to view the weather map and graphs.")
 
 # Filter the data for the selected cities
 df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
 
 # Slider for time selection
-visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperature", "Weather", "Precipitation"])
+visualization_option = st.selectbox("Select visualization", ["Temperature", "Weather", "Precipitation"])
 
 unieke_tijden = df_selected_cities["tijd"].dropna().unique()
 huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
 if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
-selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
+selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
 
 # Function to create the map with selected data
 @st.cache_data
