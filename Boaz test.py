@@ -162,13 +162,13 @@ if show_temp:
 # Create second y-axis for wind and precipitation
 ax2 = ax1.twinx()
 
-# Plot Wind Strength if enabled
+# Plot Wind Strength in green if enabled
 if show_wind:
-    ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="blue", linestyle="dashed")
+    ax2.plot(df_city["tijd"], df_city["windbft"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
 
-# Plot Precipitation if enabled
+# Plot Precipitation in blue if enabled
 if show_precip:
-    ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="green", linestyle="dotted")
+    ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue", linestyle="dotted")
 
 # Set axis labels
 ax1.set_xlabel("Uur van de dag")
@@ -188,6 +188,7 @@ plt.grid(True, linestyle="--", alpha=0.5)
 
 # Ensure the plot is rendered properly in Streamlit
 st.pyplot(fig)
+
 
 
 
