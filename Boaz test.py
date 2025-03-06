@@ -144,7 +144,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
 nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 
 # Layout for side-by-side map and graph
-col1, col2 = st.columns([2, 1])  # 2/3 for map, 1/3 for the graph
+col1, col2 = st.columns([3, 2])  # 2/3 for map, 1/3 for the graph
 
 # Display the map in the first column
 with col1:
