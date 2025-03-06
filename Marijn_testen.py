@@ -2,9 +2,9 @@ import requests
 import pandas as pd
 import streamlit as st
 from folium.features import CustomIcon
-from streamlit_folium import st_folium
+from streamlit_folium import st_folium  # Import this for Folium integration
 import folium
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # For graphing
 from datetime import datetime
 import numpy as np
 
@@ -174,12 +174,9 @@ nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
 
-# Plot temperature and precipitation graphs based on selected visualization
-if selected_cities:
+# Only plot the graph if the "Temperature" or "Precipitation" option is selected
+if visualization_option != "Weather" and selected_cities:
     fig, ax1 = plt.subplots(figsize=(10, 5))
-
-    # Set common time intervals for x-axis
-    time_intervals = sorted(df_selected_cities["tijd"].dropna().unique())
 
     if visualization_option == "Temperature":
         # Plot temperature for each city
@@ -193,7 +190,7 @@ if selected_cities:
             city_data['temp'] = city_data['temp'].interpolate(method='linear')
 
             # Plot temperature for each city
-            ax1.set_xlabel('Time (Hour)')
+            ax1.set_xlabel('Time')
             ax1.set_ylabel('Temperature (°C)', color='tab:red')
             ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
 
@@ -202,11 +199,6 @@ if selected_cities:
     elif visualization_option == "Precipitation":
         # Plot precipitation for each city (even if it's 0mm)
         ax2 = ax1.twinx()
-
-        # Set the range for precipitation Y-axis to be consistent on both sides
-        ax1.set_ylim(0, df_selected_cities['neersl'].max() + 1)
-        ax2.set_ylim(0, df_selected_cities['neersl'].max() + 1)
-
         for city in selected_cities:
             city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
@@ -226,11 +218,9 @@ if selected_cities:
 
         ax2.tick_params(axis='y', labelcolor='tab:blue')
 
-    # Format the time on the x-axis in military format (24-hour)
-    ax1.set_xticklabels([t.strftime('%H:%M') for t in sorted(df_selected_cities["tijd"].dropna().unique())])
-
     # Add title and show plot
     plt.title(f"{visualization_option} Comparison")
     fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
+
