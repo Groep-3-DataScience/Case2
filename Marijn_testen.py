@@ -174,8 +174,8 @@ nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
 
-# Only plot the graph if the "Temperature" or "Precipitation" option is selected
-if visualization_option != "Weather" and selected_cities:
+# Plot temperature and precipitation graphs based on selected visualization
+if selected_cities and visualization_option != "Weather":  # Only show graph if the option is not "Weather"
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
     if visualization_option == "Temperature":
@@ -223,4 +223,5 @@ if visualization_option != "Weather" and selected_cities:
     fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
+
 
