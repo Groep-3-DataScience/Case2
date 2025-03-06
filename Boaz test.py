@@ -106,95 +106,64 @@ df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city
 
 visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperatuur", "Weer"])
 
-unieke_tijden = df_uur_verw["tijd"].dropna().unique()
-huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
-if huidig_uur not in unieke_tijden:
-    huidig_uur = unieke_tijden[0]
-selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
-
-# Apply caching to the map creation function
-@st.cache_data
-def create_map(df, visualisatie_optie, geselecteerde_uur):
-    nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
-    df_filtered = df[df["tijd"] == geselecteerde_uur]
-
-    for index, row in df_filtered.iterrows():
-        if visualisatie_optie == "Weer":
-            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  
-            icon_url = f"{BASE_ICON_URL}{icon_file}"
-            popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
-            
-            folium.Marker(
-                location=[row["lat"], row["lon"]],
-                popup=popup_text,
-                tooltip=row["plaats"],
-                icon=CustomIcon(icon_url, icon_size=(30, 30))
-            ).add_to(nl_map)
-        
-        elif visualisatie_optie == "Temperatuur":
-            folium.map.Marker(
-                location=[row["lat"], row["lon"]],
-                tooltip=row["plaats"],
-                icon=folium.DivIcon(html=f'<div style="color:red; font-weight:bold; font-size:18px;">{row["temp"]}°C</div>')
-            ).add_to(nl_map)
-    
-    return nl_map
-
-# Create the map with the selected visualization option and hour
-nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
-
 # Layout for side-by-side map and graph
-col1, col2 = st.columns([2, 1])  # 2/3 for map, 1/3 for the graph
+col1, col2 = st.columns([3, 2])  # 3/5 for map, 2/5 for the graph
 
-# Display the map in the first column
 with col1:
+    unieke_tijden = df_uur_verw["tijd"].dropna().unique()
+    huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
+    if huidig_uur not in unieke_tijden:
+        huidig_uur = unieke_tijden[0]
+    
+    selected_hour = st.select_slider(
+        "Selecteer het uur", 
+        options=sorted(unieke_tijden), 
+        value=huidig_uur, 
+        format_func=lambda t: t.strftime('%H:%M')
+    )
+
+    @st.cache_data
+    def create_map(df, visualisatie_optie, geselecteerde_uur):
+        nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
+        df_filtered = df[df["tijd"] == geselecteerde_uur]
+
+        for index, row in df_filtered.iterrows():
+            if visualisatie_optie == "Weer":
+                icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  
+                icon_url = f"{BASE_ICON_URL}{icon_file}"
+                popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
+                
+                folium.Marker(
+                    location=[row["lat"], row["lon"]],
+                    popup=popup_text,
+                    tooltip=row["plaats"],
+                    icon=CustomIcon(icon_url, icon_size=(30, 30))
+                ).add_to(nl_map)
+            
+            elif visualisatie_optie == "Temperatuur":
+                folium.map.Marker(
+                    location=[row["lat"], row["lon"]],
+                    tooltip=row["plaats"],
+                    icon=folium.DivIcon(html=f'<div style="color:red; font-weight:bold; font-size:18px;">{row["temp"]}°C</div>')
+                ).add_to(nl_map)
+        
+        return nl_map
+
+    nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
     st_folium(nl_map, width=700)
 
-# Display the graph in the second column
 with col2:
     st.subheader("Weersverloop per uur")
-
     selected_city = st.selectbox("Selecteer een stad", cities)
     show_temp = st.checkbox("Temperatuur (°C)", value=True)
     show_wind = st.checkbox("Windkracht (Bft)")
     show_precip = st.checkbox("Neerslag (mm)")
 
     df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
-
-    # Make sure to use the correct format for the time column to display hours on the x-axis
     df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
 
-    # Increase figure size for better visibility
-    fig, ax1 = plt.subplots(figsize=(12, 6))  
-
-    # Plot Temperature if enabled
+    fig, ax1 = plt.subplots(figsize=(12, 6))
     if show_temp:
         ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
-        ax1.set_ylabel("Temperatuur (°C)")  
-        ax1.tick_params(axis="y", labelcolor="black")  
-
-    # Create second y-axis for wind and precipitation
-    ax2 = ax1.twinx()
-
-    # Plot Wind Strength in green if enabled
-    if show_wind:
-        ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
-
-    # Plot Precipitation in blue if enabled
-    if show_precip:
-        ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue")
-
-    # Set title with new wording
-    ax1.set_title(f"Weer van {selected_city} per uur")
-
-    # Adjust x-axis label rotation for better readability
-    ax1.set_xlabel("Tijd")
-    ax1.set_xticks(df_city["tijd"])  
-    ax1.set_xticklabels(df_city["tijd"], rotation=45, ha="right")  
-
-    # Set labels for y-axes
-    ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
-    ax2.tick_params(axis="y", labelcolor="black")
-
-    # Show the plot
+    ax1.set_xticklabels(df_city["tijd"], rotation=45, ha="right")
     st.pyplot(fig)
