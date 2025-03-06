@@ -150,25 +150,38 @@ df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
 
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
+# Plot Temperature if enabled
 if show_temp:
     ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
     ax1.set_ylabel("Temperatuur (°C)", color="red")
     ax1.tick_params(axis="y", labelcolor="red")
 
+# Create second y-axis for wind and precipitation
 ax2 = ax1.twinx()
+
+# Plot Wind Strength if enabled
 if show_wind:
     ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="blue", linestyle="dashed")
+
+# Plot Precipitation if enabled
 if show_precip:
     ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="green", linestyle="dotted")
 
+# Set axis labels
 ax1.set_xlabel("Tijdstip")
 ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
-ax2.legend(loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
-# Rotate x-axis labels
+# Combine legends from both axes
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
+
+# Rotate x-axis labels for better readability
 plt.xticks(rotation=45)
 
 # Enable grid lines for clarity
 plt.grid(True, linestyle="--", alpha=0.5)
 
+# Show the plot
 st.pyplot(fig)
+
