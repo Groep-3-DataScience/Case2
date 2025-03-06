@@ -6,6 +6,7 @@ from streamlit_folium import st_folium  # Import this for Folium integration
 import folium
 import matplotlib.pyplot as plt  # For graphing
 from datetime import datetime
+import numpy as np
 
 # API Configuration
 api_key = 'd5184c3b4e'
@@ -182,6 +183,12 @@ if selected_cities:
     for city in selected_cities:
         city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
+        # Ensure time is sorted correctly
+        city_data = city_data.sort_values('tijd')
+
+        # Interpolation for missing temperature values (linear interpolation)
+        city_data['temp'] = city_data['temp'].interpolate(method='linear')
+
         # Plot temperature for each city
         ax1.set_xlabel('Time')
         ax1.set_ylabel('Temperature (°C)', color='tab:red')
@@ -194,12 +201,15 @@ if selected_cities:
     for city in selected_cities:
         city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-        # Filter out rows where precipitation is NaN or zero
-        city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
+        # Interpolation for missing precipitation values (linear interpolation)
+        city_data['neersl'] = city_data['neersl'].interpolate(method='linear')
 
-        if not city_data.empty:
-            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+        # Replace zero precipitation values with NaN to avoid breaking lines
+        city_data['neersl'] = city_data['neersl'].replace(0, np.nan)
+
+        # Plot precipitation for each city
+        ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
 
     ax2.tick_params(axis='y', labelcolor='tab:blue')
 
