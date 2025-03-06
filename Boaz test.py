@@ -148,6 +148,9 @@ show_precip = st.checkbox("Neerslag (mm)")
 
 df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
 
+# Make sure to use the correct format for the time column to display hours on the x-axis
+df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
+
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
 # Plot Temperature if enabled
@@ -168,7 +171,7 @@ if show_precip:
     ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="green", linestyle="dotted")
 
 # Set axis labels
-ax1.set_xlabel("Tijdstip")
+ax1.set_xlabel("Uur van de dag")
 ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
 
 # Combine legends from both axes
@@ -184,4 +187,3 @@ plt.grid(True, linestyle="--", alpha=0.5)
 
 # Show the plot
 st.pyplot(fig)
-
