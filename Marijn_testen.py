@@ -98,16 +98,16 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# City selection dropdown
-selected_city = st.selectbox("Selecteer een stad", cities)
+# Multi-select for cities
+selected_cities = st.multiselect("Selecteer steden", cities)
 
-# Filter the data for the selected city
-df_city_data = df_uur_verw[df_uur_verw['plaats'] == selected_city]
+# Filter the data for the selected cities
+df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
 
 # Slider for time selection
 visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperature", "Weather", "Precipitation"])
 
-unieke_tijden = df_city_data["tijd"].dropna().unique()
+unieke_tijden = df_selected_cities["tijd"].dropna().unique()
 huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
 if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
@@ -156,25 +156,33 @@ nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 st_folium(nl_map, width=700)
 
 # Plot temperature and precipitation graphs
-if selected_city:
-    # Filter data for the selected city
-    city_data = df_uur_verw[df_uur_verw['plaats'] == selected_city]
-
-    # Plot temperature
+if selected_cities:
+    # Create subplots for comparison
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
-    ax1.set_xlabel('Time')
-    ax1.set_ylabel('Temperature (°C)', color='tab:red')
-    ax1.plot(city_data['tijd'], city_data['temp'], color='tab:red', label='Temperature')
+    # Loop through selected cities to plot the data for each city
+    for city in selected_cities:
+        city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+
+        # Plot temperature for each city
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel('Temperature (°C)', color='tab:red')
+        ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
+
     ax1.tick_params(axis='y', labelcolor='tab:red')
 
-    # Plot precipitation
+    # Plot precipitation for each city on the same graph
     ax2 = ax1.twinx()
-    ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-    ax2.plot(city_data['tijd'], city_data['neersl'], color='tab:blue', label='Precipitation')
+    for city in selected_cities:
+        city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+
+        ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+
     ax2.tick_params(axis='y', labelcolor='tab:blue')
 
     # Add title and show plot
-    plt.title(f"Temperature and Precipitation for {selected_city}")
+    plt.title(f"Temperature and Precipitation Comparison")
+    fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
