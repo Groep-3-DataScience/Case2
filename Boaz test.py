@@ -180,7 +180,7 @@ lines2, labels2 = ax2.get_legend_handles_labels()
 ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
 # Rotate x-axis labels for better visibility (angle 45 degrees)
-plt.xticks(rotation=45)
+plt.xticks(rotation=60)
 
 # Enable grid lines for clarity
 plt.grid(True, linestyle="--", alpha=0.5)
