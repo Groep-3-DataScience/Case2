@@ -4,16 +4,17 @@ import streamlit as st
 from folium.features import CustomIcon
 from streamlit_folium import st_folium  # Import this for Folium integration
 import folium
+import matplotlib.pyplot as plt  # For graphing
 from datetime import datetime
 
-# API Configuratie gaat goed, niks meer aan doen
+# API Configuration
 api_key = 'd5184c3b4e'
 cities = [
     'Assen', 'Lelystad', 'Leeuwarden', 'Arnhem', 'Groningen', 'Maastricht', 
     'Eindhoven', 'Den Helder', 'Enschede', 'Amersfoort', 'Middelburg', 'Rotterdam'
 ]
 
-# Data ophalen en omzetten naar dataframes
+# Fetch and transform weather data
 @st.cache_data
 def fetch_weather_data():
     liveweer, wk_verw, uur_verw, api_data = [], [], [], []
@@ -48,7 +49,7 @@ df_wk_verw = pd.DataFrame(wk_verw)
 df_uur_verw = pd.DataFrame(uur_verw)
 df_api_data = pd.DataFrame(api_data)
 
-# Data opschoning voor df_wk_verw
+# Process hourly data
 @st.cache_data
 def process_hourly_data(df):
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
@@ -97,10 +98,16 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# Slider voor tijdsnotatie
+# City selection dropdown
+selected_city = st.selectbox("Selecteer een stad", cities)
+
+# Filter the data for the selected city
+df_city_data = df_uur_verw[df_uur_verw['plaats'] == selected_city]
+
+# Slider for time selection
 visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperature", "Weather", "Precipitation"])
 
-unieke_tijden = df_uur_verw["tijd"].dropna().unique()
+unieke_tijden = df_city_data["tijd"].dropna().unique()
 huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
 if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
@@ -147,3 +154,27 @@ nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
+
+# Plot temperature and precipitation graphs
+if selected_city:
+    # Filter data for the selected city
+    city_data = df_uur_verw[df_uur_verw['plaats'] == selected_city]
+
+    # Plot temperature
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Temperature (°C)', color='tab:red')
+    ax1.plot(city_data['tijd'], city_data['temp'], color='tab:red', label='Temperature')
+    ax1.tick_params(axis='y', labelcolor='tab:red')
+
+    # Plot precipitation
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+    ax2.plot(city_data['tijd'], city_data['neersl'], color='tab:blue', label='Precipitation')
+    ax2.tick_params(axis='y', labelcolor='tab:blue')
+
+    # Add title and show plot
+    plt.title(f"Temperature and Precipitation for {selected_city}")
+    plt.tight_layout()
+    st.pyplot(fig)
