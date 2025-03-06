@@ -2,9 +2,9 @@ import requests
 import pandas as pd
 import streamlit as st
 from folium.features import CustomIcon
-from streamlit_folium import st_folium  # Import this for Folium integration
+from streamlit_folium import st_folium
 import folium
-import matplotlib.pyplot as plt  # For graphing
+import matplotlib.pyplot as plt
 from datetime import datetime
 import numpy as np
 
@@ -135,16 +135,22 @@ def create_full_map(df, visualisatie_optie, geselecteerde_uur):
     
     return nl_map
 
-# Set all cities selected by default
-selected_cities = cities
+# Streamlit: Select/Deselect All cities
+select_all = st.button("Select/Deselect All Cities")
 
-# Checkbox interface for cities placed above the graph and below the map
-st.subheader("Select Cities to Show:")
+if select_all:
+    if 'all_selected' not in st.session_state:
+        st.session_state['all_selected'] = True
+    else:
+        st.session_state['all_selected'] = not st.session_state['all_selected']
 
-cols = st.columns(3)  # Creating 3 columns for better organization
-for i, city in enumerate(cities):
-    with cols[i % 3]:  # Distribute the cities over three columns
-        selected_cities.append(city) if st.checkbox(city, value=True) else selected_cities
+# Default all cities selected or deselected based on button press
+selected_cities = cities if st.session_state.get('all_selected', False) else []
+
+# Checkbox interface for cities
+for city in cities:
+    if city not in selected_cities:
+        selected_cities.append(city) if st.checkbox(city, value=False) else selected_cities
 
 # If no cities are selected for the graph, show a warning
 if not selected_cities:
@@ -172,6 +178,9 @@ st_folium(nl_map, width=700)
 if selected_cities:
     fig, ax1 = plt.subplots(figsize=(10, 5))
 
+    # Set common time intervals for x-axis
+    time_intervals = sorted(df_selected_cities["tijd"].dropna().unique())
+
     if visualization_option == "Temperature":
         # Plot temperature for each city
         for city in selected_cities:
@@ -184,7 +193,7 @@ if selected_cities:
             city_data['temp'] = city_data['temp'].interpolate(method='linear')
 
             # Plot temperature for each city
-            ax1.set_xlabel('Time')
+            ax1.set_xlabel('Time (Hour)')
             ax1.set_ylabel('Temperature (°C)', color='tab:red')
             ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
 
