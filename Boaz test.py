@@ -6,9 +6,8 @@ from streamlit_folium import st_folium
 import folium
 from datetime import datetime
 
-# Enable static serving for Streamlit
+# Configure Streamlit
 st.set_page_config(page_title="Weerkaart Nederland", layout="wide")
-st.enableStaticServing = True
 
 api_key = 'd5184c3b4e'
 cities = [
@@ -62,6 +61,9 @@ df_uur_verw = process_hourly_data(df_uur_verw)
 
 st.title("Weerkaart Nederland")
 
+# Base URL for GitHub-hosted images
+BASE_ICON_URL = "https://raw.githubusercontent.com/Groep-3-Datascience/Case2/main/iconen-weerlive/"
+
 weather_icons = {
     "zonnig": "zonnig.png",
     "bewolkt": "bewolkt.png",
@@ -112,15 +114,15 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
 
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weer":
-            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")
-            icon_path = f"iconen-weerlive/{icon_file}"
+            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  
+            icon_url = f"{BASE_ICON_URL}{icon_file}"  # GitHub-hosted icon
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
             
             folium.Marker(
                 location=[row["lat"], row["lon"]],
                 popup=popup_text,
                 tooltip=row["plaats"],
-                icon=CustomIcon(icon_path, icon_size=(30, 30))
+                icon=CustomIcon(icon_url, icon_size=(30, 30))  # Use URL instead of local path
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Temperatuur":
