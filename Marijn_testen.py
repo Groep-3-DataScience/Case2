@@ -42,7 +42,14 @@ def fetch_weather_data():
     
     return liveweer, wk_verw, uur_verw, api_data
 
-# Caching the weather data processing
+liveweer, wk_verw, uur_verw, api_data = fetch_weather_data()
+
+df_liveweer = pd.DataFrame(liveweer)
+df_wk_verw = pd.DataFrame(wk_verw)
+df_uur_verw = pd.DataFrame(uur_verw)
+df_api_data = pd.DataFrame(api_data)
+
+# Process hourly data
 @st.cache_data
 def process_hourly_data(df):
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
@@ -51,10 +58,28 @@ def process_hourly_data(df):
     df['tijd'] = pd.to_datetime(df['tijd'], format='%H:%M', errors='coerce')
     return df
 
-# Streamlit UI components
+df_uur_verw = process_hourly_data(df_uur_verw)
+
+# Streamlit UI
 st.title("Weerkaart Nederland")
 
-# City coordinates
+weather_icons = {
+    "zonnig": "zonnig.png",
+    "bewolkt": "bewolkt.png",
+    "half bewolkt": "halfbewolkt.png",
+    "licht bewolkt": "halfbewolkt.png",
+    "regen": "regen.png",
+    "buien": "buien.png",
+    "mist": "mist.png",
+    "sneeuw": "sneeuw.png",
+    "onweer": "bliksem.png",
+    "hagel": "hagel.png",
+    "heldere nacht": "helderenacht.png",
+    "nachtmist": "nachtmist.png",
+    "wolkennacht": "wolkennacht.png",
+    "zwaar bewolkt": "zwaarbewolkt.png"
+}
+
 city_coords = {
     "Assen": [52.9929, 6.5642],
     "Lelystad": [52.5185, 5.4714],
@@ -70,37 +95,38 @@ city_coords = {
     "Rotterdam": [51.9225, 4.4792],
 }
 
-# Initial cache fetch and process
-liveweer, wk_verw, uur_verw, api_data = fetch_weather_data()
-df_uur_verw = pd.DataFrame(uur_verw)
-df_uur_verw = process_hourly_data(df_uur_verw)
+df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
+df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# Map Creation
+# Map with all cities
 @st.cache_data
-def create_map(df, visualisatie_optie, geselecteerde_uur, selected_cities):
+def create_full_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
-    df_filtered = df[(df["tijd"] == geselecteerde_uur) & (df["plaats"].isin(selected_cities))]
+    df_filtered = df[df["tijd"] == geselecteerde_uur]
 
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weather":
-            icon_file = f"iconen-weerlive/{row['image'].lower()}.png"  # Icon based on weather condition
+            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
+            icon_path = f"iconen-weerlive/{icon_file}"
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
+            
             folium.Marker(
                 location=[row["lat"], row["lon"]],
                 popup=popup_text,
                 tooltip=row["plaats"],
-                icon=CustomIcon(icon_file, icon_size=(30, 30))
+                icon=CustomIcon(icon_path, icon_size=(30, 30))
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Temperature":
-            folium.Marker(
+            folium.map.Marker(
                 location=[row["lat"], row["lon"]],
                 tooltip=row["plaats"],
                 icon=folium.DivIcon(html=f'<div style="color:red; font-weight:bold; font-size:18px;">{row["temp"]}°C</div>')
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Precipitation":
-            folium.Marker(
+            # Adding precipitation as a marker
+            folium.map.Marker(
                 location=[row["lat"], row["lon"]],
                 tooltip=row["plaats"],
                 icon=folium.DivIcon(html=f'<div style="color:blue; font-weight:bold; font-size:18px;">{row["neersl"]} mm</div>')
@@ -129,18 +155,20 @@ for city in cities:
 if not selected_cities:
     st.warning("Select at least one city to view the weather graph.")
 
+# Filter the data for the selected cities
+df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
+
 # Slider for time selection
 visualization_option = st.selectbox("Select visualization", ["Temperature", "Weather", "Precipitation"])
 
-# Time selection
-unieke_tijden = df_uur_verw["tijd"].dropna().unique()
+unieke_tijden = df_selected_cities["tijd"].dropna().unique()
 huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
 if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
 selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
 
 # Create the map with all cities always displayed
-nl_map = create_map(df_uur_verw, visualization_option, selected_hour, selected_cities)
+nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
@@ -152,33 +180,31 @@ if selected_cities:
 
     # Loop through selected cities to plot the data for each city
     for city in selected_cities:
-        city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-        if visualization_option == "Temperature":
-            # Plot only the temperature for each city
-            ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
+        # Plot temperature for each city
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel('Temperature (°C)', color='tab:red')
+        ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
 
-    ax1.set_xlabel('Time')
-    ax1.set_ylabel('Temperature (°C)', color='tab:red')
     ax1.tick_params(axis='y', labelcolor='tab:red')
 
     # Plot precipitation for each city on the same graph (only for valid precipitation values)
-    if visualization_option == "Precipitation":
-        ax2 = ax1.twinx()
-        for city in selected_cities:
-            city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+    ax2 = ax1.twinx()
+    for city in selected_cities:
+        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-            # Filter out rows where precipitation is NaN or zero
-            city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
+        # Filter out rows where precipitation is NaN or zero
+        city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
 
-            if not city_data.empty:
-                ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-                ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+        if not city_data.empty:
+            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
 
-        ax2.tick_params(axis='y', labelcolor='tab:blue')
+    ax2.tick_params(axis='y', labelcolor='tab:blue')
 
     # Add title and show plot
-    plt.title(f"{visualization_option} Comparison")
+    plt.title(f"Temperature and Precipitation Comparison")
     fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
