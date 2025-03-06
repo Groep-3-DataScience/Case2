@@ -163,6 +163,12 @@ if show_precip:
 
 ax1.set_xlabel("Tijdstip")
 ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
-ax2.legend(loc="upper left")
+ax2.legend(loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
+
+# Rotate x-axis labels
+plt.xticks(rotation=45)
+
+# Enable grid lines for clarity
+plt.grid(True, linestyle="--", alpha=0.5)
 
 st.pyplot(fig)
