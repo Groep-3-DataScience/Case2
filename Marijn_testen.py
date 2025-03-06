@@ -197,16 +197,20 @@ if selected_cities:
         ax1.tick_params(axis='y', labelcolor='tab:red')
 
     elif visualization_option == "Precipitation":
-        # Plot precipitation for each city
+        # Plot precipitation for each city (even if it's 0mm)
         ax2 = ax1.twinx()
         for city in selected_cities:
             city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
+            # Ensure time is sorted correctly
+            city_data = city_data.sort_values('tijd')
+
             # Interpolation for missing precipitation values (linear interpolation)
             city_data['neersl'] = city_data['neersl'].interpolate(method='linear')
 
-            # Replace zero precipitation values with NaN to avoid breaking lines
-            city_data['neersl'] = city_data['neersl'].replace(0, np.nan)
+            # If precipitation is zero for the entire day, make sure to plot a flat line at 0
+            if city_data['neersl'].isna().all():
+                city_data['neersl'] = 0  # If all values are NaN, set to 0 mm
 
             # Plot precipitation for each city
             ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
