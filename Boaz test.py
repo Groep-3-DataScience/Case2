@@ -113,7 +113,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weer":
             icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")
-            icon_path = f"iconen-weerlive/{icon_file}"
+            icon_path = f"Case2/iconen-weerlive/{icon_file}"
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
             
             folium.Marker(
