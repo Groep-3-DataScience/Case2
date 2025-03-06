@@ -135,25 +135,16 @@ def create_full_map(df, visualisatie_optie, geselecteerde_uur):
     
     return nl_map
 
-# Streamlit: Select/Deselect All cities
-select_all = st.button("Select/Deselect All Cities")
+# Set all cities selected by default
+selected_cities = cities
 
-if select_all:
-    if 'all_selected' not in st.session_state:
-        st.session_state['all_selected'] = True
-    else:
-        st.session_state['all_selected'] = not st.session_state['all_selected']
-
-# Default all cities selected or deselected based on button press
-selected_cities = cities if st.session_state.get('all_selected', False) else []
-
-# Checkbox interface for cities placed in a more compact layout above the graph
+# Checkbox interface for cities placed above the graph and below the map
 st.subheader("Select Cities to Show:")
-cols = st.columns(3)  # Creating 3 columns for better organization
 
+cols = st.columns(3)  # Creating 3 columns for better organization
 for i, city in enumerate(cities):
     with cols[i % 3]:  # Distribute the cities over three columns
-        selected_cities.append(city) if st.checkbox(city, value=False) else selected_cities
+        selected_cities.append(city) if st.checkbox(city, value=True) else selected_cities
 
 # If no cities are selected for the graph, show a warning
 if not selected_cities:
@@ -174,7 +165,7 @@ selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), v
 # Create the map with all cities always displayed
 nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 
-# Display the map in Streamlit (with no need to press any button)
+# Display the map in Streamlit
 st_folium(nl_map, width=700)
 
 # Plot temperature and precipitation graphs based on selected visualization
