@@ -1,4 +1,3 @@
-
 import requests
 import pandas as pd
 import streamlit as st
@@ -155,7 +154,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     return nl_map
 
 # Create the map with selected options
-nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
+nl_map = create_map(df_selected_cities, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
@@ -167,7 +166,7 @@ if selected_cities:
 
     # Loop through selected cities to plot the data for each city
     for city in selected_cities:
-        city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
         # Plot temperature for each city
         ax1.set_xlabel('Time')
@@ -176,13 +175,17 @@ if selected_cities:
 
     ax1.tick_params(axis='y', labelcolor='tab:red')
 
-    # Plot precipitation for each city on the same graph
+    # Plot precipitation for each city on the same graph (only for valid precipitation values)
     ax2 = ax1.twinx()
     for city in selected_cities:
-        city_data = df_uur_verw[df_uur_verw['plaats'] == city]
+        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-        ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+        # Filter out rows where precipitation is NaN or zero
+        city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
+
+        if not city_data.empty:
+            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
 
     ax2.tick_params(axis='y', labelcolor='tab:blue')
 
