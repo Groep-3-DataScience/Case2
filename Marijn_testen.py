@@ -1,4 +1,3 @@
-
 import requests
 import pandas as pd
 import streamlit as st
@@ -64,20 +63,20 @@ df_uur_verw = process_hourly_data(df_uur_verw)
 st.title("Weerkaart Nederland")
 
 weather_icons = {
-    "zonnig": "https://example.com/icons/zonnig.png",  # Replace with real URLs
-    "bewolkt": "https://example.com/icons/bewolkt.png",
-    "half bewolkt": "https://example.com/icons/halfbewolkt.png",
-    "licht bewolkt": "https://example.com/icons/halfbewolkt.png",
-    "regen": "https://example.com/icons/regen.png",
-    "buien": "https://example.com/icons/buien.png",
-    "mist": "https://example.com/icons/mist.png",
-    "sneeuw": "https://example.com/icons/sneeuw.png",
-    "onweer": "https://example.com/icons/bliksem.png",
-    "hagel": "https://example.com/icons/hagel.png",
-    "heldere nacht": "https://example.com/icons/helderenacht.png",
-    "nachtmist": "https://example.com/icons/nachtmist.png",
-    "wolkennacht": "https://example.com/icons/wolkennacht.png",
-    "zwaar bewolkt": "https://example.com/icons/zwaarbewolkt.png"
+    "zonnig": "zonnig.png",
+    "bewolkt": "bewolkt.png",
+    "half bewolkt": "halfbewolkt.png",
+    "licht bewolkt": "halfbewolkt.png",
+    "regen": "regen.png",
+    "buien": "buien.png",
+    "mist": "mist.png",
+    "sneeuw": "sneeuw.png",
+    "onweer": "bliksem.png",
+    "hagel": "hagel.png",
+    "heldere nacht": "helderenacht.png",
+    "nachtmist": "nachtmist.png",
+    "wolkennacht": "wolkennacht.png",
+    "zwaar bewolkt": "zwaarbewolkt.png"
 }
 
 city_coords = {
@@ -115,14 +114,15 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
 
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weather":
-            icon_url = weather_icons.get(row['image'].lower(), "https://example.com/icons/bewolkt.png")  # Default icon
+            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
+            icon_path = f"iconen-weerlive/{icon_file}"
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
             
             folium.Marker(
                 location=[row["lat"], row["lon"]],
                 popup=popup_text,
                 tooltip=row["plaats"],
-                icon=CustomIcon(icon_url, icon_size=(30, 30))
+                icon=CustomIcon(icon_path, icon_size=(30, 30))
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Temperature":
