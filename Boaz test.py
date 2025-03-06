@@ -1,9 +1,10 @@
 import requests
 import pandas as pd
 import streamlit as st
+import folium
 from folium.features import CustomIcon
 from streamlit_folium import st_folium
-import folium
+import matplotlib.pyplot as plt
 from datetime import datetime
 
 # Configure Streamlit
@@ -115,14 +116,14 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weer":
             icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  
-            icon_url = f"{BASE_ICON_URL}{icon_file}"  # GitHub-hosted icon
+            icon_url = f"{BASE_ICON_URL}{icon_file}"
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
             
             folium.Marker(
                 location=[row["lat"], row["lon"]],
                 popup=popup_text,
                 tooltip=row["plaats"],
-                icon=CustomIcon(icon_url, icon_size=(30, 30))  # Use URL instead of local path
+                icon=CustomIcon(icon_url, icon_size=(30, 30))
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Temperatuur":
@@ -136,3 +137,32 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
 
 nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 st_folium(nl_map, width=700)
+
+# Graph Section
+st.subheader("Weersverloop per uur")
+
+selected_city = st.selectbox("Selecteer een stad", cities)
+show_temp = st.checkbox("Temperatuur (°C)", value=True)
+show_wind = st.checkbox("Windkracht (Bft)")
+show_precip = st.checkbox("Neerslag (mm)")
+
+df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
+
+fig, ax1 = plt.subplots(figsize=(10, 5))
+
+if show_temp:
+    ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
+    ax1.set_ylabel("Temperatuur (°C)", color="red")
+    ax1.tick_params(axis="y", labelcolor="red")
+
+ax2 = ax1.twinx()
+if show_wind:
+    ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="blue", linestyle="dashed")
+if show_precip:
+    ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="green", linestyle="dotted")
+
+ax1.set_xlabel("Tijdstip")
+ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
+ax2.legend(loc="upper left")
+
+st.pyplot(fig)
