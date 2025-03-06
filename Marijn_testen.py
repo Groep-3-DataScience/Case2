@@ -1,4 +1,3 @@
-#hele goede
 import requests
 import pandas as pd
 import streamlit as st
@@ -148,9 +147,12 @@ if select_all:
 # Default all cities selected or deselected based on button press
 selected_cities = cities if st.session_state.get('all_selected', False) else []
 
-# Checkbox interface for cities
-for city in cities:
-    if city not in selected_cities:
+# Checkbox interface for cities placed in a more compact layout above the graph
+st.subheader("Select Cities to Show:")
+cols = st.columns(3)  # Creating 3 columns for better organization
+
+for i, city in enumerate(cities):
+    with cols[i % 3]:  # Distribute the cities over three columns
         selected_cities.append(city) if st.checkbox(city, value=False) else selected_cities
 
 # If no cities are selected for the graph, show a warning
@@ -172,7 +174,7 @@ selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), v
 # Create the map with all cities always displayed
 nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 
-# Display the map in Streamlit
+# Display the map in Streamlit (with no need to press any button)
 st_folium(nl_map, width=700)
 
 # Plot temperature and precipitation graphs based on selected visualization
