@@ -98,28 +98,9 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# Checkbox interface for cities
-selected_cities = [city for city in cities if st.checkbox(city, value=True)]
-
-# If no cities are selected, show a message
-if not selected_cities:
-    st.warning("Select at least one city to view the weather map and graphs.")
-
-# Filter the data for the selected cities
-df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
-
-# Slider for time selection
-visualization_option = st.selectbox("Select visualization", ["Temperature", "Weather", "Precipitation"])
-
-unieke_tijden = df_selected_cities["tijd"].dropna().unique()
-huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
-if huidig_uur not in unieke_tijden:
-    huidig_uur = unieke_tijden[0]
-selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
-
-# Function to create the map with selected data
+# Map with all cities
 @st.cache_data
-def create_map(df, visualisatie_optie, geselecteerde_uur):
+def create_full_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
     df_filtered = df[df["tijd"] == geselecteerde_uur]
 
@@ -153,8 +134,41 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     
     return nl_map
 
-# Create the map with selected options
-nl_map = create_map(df_selected_cities, visualization_option, selected_hour)
+# Streamlit: Select/Deselect All cities
+select_all = st.button("Select/Deselect All Cities")
+
+if select_all:
+    if 'all_selected' not in st.session_state:
+        st.session_state['all_selected'] = True
+    else:
+        st.session_state['all_selected'] = not st.session_state['all_selected']
+
+# Default all cities selected or deselected based on button press
+selected_cities = cities if st.session_state.get('all_selected', False) else []
+
+# Checkbox interface for cities
+for city in cities:
+    if city not in selected_cities:
+        selected_cities.append(city) if st.checkbox(city, value=False) else selected_cities
+
+# If no cities are selected for the graph, show a warning
+if not selected_cities:
+    st.warning("Select at least one city to view the weather graph.")
+
+# Filter the data for the selected cities
+df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
+
+# Slider for time selection
+visualization_option = st.selectbox("Select visualization", ["Temperature", "Weather", "Precipitation"])
+
+unieke_tijden = df_selected_cities["tijd"].dropna().unique()
+huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
+if huidig_uur not in unieke_tijden:
+    huidig_uur = unieke_tijden[0]
+selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
+
+# Create the map with all cities always displayed
+nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
