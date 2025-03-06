@@ -110,9 +110,9 @@ selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijd
 @st.cache_data
 def create_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
-    df_filtered = df[df["tijd"] == geselecteerde_uur]
+    df_filtered = df[df["tijd"] == geselecteerde_uur]  # Filter based on selected hour
 
-    for index, row in df_filtered.iterrows():
+    for index, row in df.iterrows():  # Iterate over all data rows, not just filtered ones
         if visualisatie_optie == "Weather":
             icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
             icon_path = f"iconen-weerlive/{icon_file}"
@@ -133,7 +133,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Precipitation":
-            # Adding precipitation as a marker
+            # Adding precipitation as a marker for all cities
             folium.map.Marker(
                 location=[row["lat"], row["lon"]],
                 tooltip=row["plaats"],
@@ -147,4 +147,3 @@ nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
-
