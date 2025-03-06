@@ -164,13 +164,14 @@ with col2:
     # Make sure to use the correct format for the time column to display hours on the x-axis
     df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
 
-    fig, ax1 = plt.subplots(figsize=(10, 5))
+    # Increase figure size for better visibility
+    fig, ax1 = plt.subplots(figsize=(12, 6))  
 
     # Plot Temperature if enabled
     if show_temp:
         ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
-        ax1.set_ylabel("Temperatuur (°C)")  # Removed color to keep it default
-        ax1.tick_params(axis="y", labelcolor="black")  # Reset the y-axis ticks color to default
+        ax1.set_ylabel("Temperatuur (°C)")  
+        ax1.tick_params(axis="y", labelcolor="black")  
 
     # Create second y-axis for wind and precipitation
     ax2 = ax1.twinx()
@@ -183,11 +184,18 @@ with col2:
     if show_precip:
         ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue")
 
-    # Add labels and legend
+    # Set title with new wording
+    ax1.set_title(f"Weer van {selected_city} per uur")
+
+    # Adjust x-axis label rotation for better readability
     ax1.set_xlabel("Tijd")
+    ax1.set_xticks(df_city["tijd"])  
+    ax1.set_xticklabels(df_city["tijd"], rotation=45, ha="right")  
+
+    # Set labels for y-axes
     ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
-    ax1.set_title(f"Weer voor {selected_city} per uur")
     ax2.tick_params(axis="y", labelcolor="black")
 
     # Show the plot
     st.pyplot(fig)
+
