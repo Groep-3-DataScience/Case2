@@ -209,12 +209,15 @@ if selected_cities:
 
         # Plot precipitation for each city
         ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+        ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='-', marker='x')
 
     ax2.tick_params(axis='y', labelcolor='tab:blue')
 
     # Add title and show plot
     plt.title(f"Temperature and Precipitation Comparison")
-    fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
+    
+    # Move the legend to the right
+    fig.legend(loc='upper left', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
+    
     plt.tight_layout()
     st.pyplot(fig)
