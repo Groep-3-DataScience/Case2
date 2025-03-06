@@ -180,12 +180,14 @@ lines2, labels2 = ax2.get_legend_handles_labels()
 ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
 # Rotate x-axis labels for better visibility (angle 45 degrees)
-plt.xticks(rotation=60)
+# Use ax1 directly to rotate x-ticks
+ax1.tick_params(axis='x', rotation=45)
 
 # Enable grid lines for clarity
 plt.grid(True, linestyle="--", alpha=0.5)
 
 # Ensure the plot is rendered properly in Streamlit
 st.pyplot(fig)
+
 
 
