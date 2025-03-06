@@ -16,6 +16,7 @@ cities = [
     'Eindhoven', 'Den Helder', 'Enschede', 'Amersfoort', 'Middelburg', 'Rotterdam'
 ]
 
+# Apply caching to the function that fetches weather data
 @st.cache_data
 def fetch_weather_data():
     liveweer, wk_verw, uur_verw, api_data = [], [], [], []
@@ -43,6 +44,7 @@ def fetch_weather_data():
     
     return liveweer, wk_verw, uur_verw, api_data
 
+# Fetch the weather data and store the result in variables
 liveweer, wk_verw, uur_verw, api_data = fetch_weather_data()
 
 df_liveweer = pd.DataFrame(liveweer)
@@ -50,6 +52,7 @@ df_wk_verw = pd.DataFrame(wk_verw)
 df_uur_verw = pd.DataFrame(uur_verw)
 df_api_data = pd.DataFrame(api_data)
 
+# Apply caching to the function that processes hourly data
 @st.cache_data
 def process_hourly_data(df):
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
@@ -58,8 +61,10 @@ def process_hourly_data(df):
     df['tijd'] = pd.to_datetime(df['tijd'], format='%H:%M', errors='coerce')
     return df
 
+# Process the hourly weather data
 df_uur_verw = process_hourly_data(df_uur_verw)
 
+# Streamlit app title
 st.title("Weerkaart Nederland")
 
 # Base URL for GitHub-hosted images
@@ -79,7 +84,6 @@ weather_icons = {
     "heldere nacht": "helderenacht.png",
     "nachtmist": "nachtmist.png",
     "wolkennacht": "wolkennacht.png",
-    "zwaar bewolkt": "zwaarbewolkt.png"
 }
 
 city_coords = {
@@ -108,6 +112,7 @@ if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
 selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
 
+# Apply caching to the map creation function
 @st.cache_data
 def create_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
@@ -135,6 +140,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     
     return nl_map
 
+# Create the map with the selected visualization option and hour
 nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 
 # Layout for side-by-side map and graph
@@ -175,27 +181,13 @@ with col2:
 
     # Plot Precipitation in blue if enabled
     if show_precip:
-        ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue", linestyle="dotted")
+        ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue")
 
-    # Set axis labels
-    ax1.set_xlabel("Uur van de dag")
+    # Add labels and legend
+    ax1.set_xlabel("Tijd")
     ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
+    ax1.set_title(f"Weer voor {selected_city} per uur")
+    ax2.tick_params(axis="y", labelcolor="black")
 
-    # Combine legends from both axes
-    lines, labels = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
-
-    # Rotate x-axis labels for better visibility (angle 45 degrees)
-    ax1.tick_params(axis='x', rotation=45)
-
-    # Set reasonable min and max values for both y-axes
-    ax1.set_ylim(min(df_city["temp"]) - 5, max(df_city["temp"]) + 5)  # Adjust the temperature y-axis range
-    ax2.set_ylim(min(df_city["windknp"].min(), df_city["neersl"].min()) - 1, 
-                 max(df_city["windknp"].max(), df_city["neersl"].max()) + 2)  # Adjust the wind/precipitation y-axis range
-
-    # Enable grid lines for clarity
-    plt.grid(True, linestyle="--", alpha=0.5)
-
-    # Ensure the plot is rendered properly in Streamlit
+    # Show the plot
     st.pyplot(fig)
