@@ -136,61 +136,66 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
     return nl_map
 
 nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
-st_folium(nl_map, width=700)
 
-# Graph Section
-st.subheader("Weersverloop per uur")
+# Layout for side-by-side map and graph
+col1, col2 = st.columns([2, 1])  # 2/3 for map, 1/3 for the graph
 
-# Set default values for city and hour
-selected_city = st.selectbox("Selecteer een stad", cities, index=0)  # Default to first city
-show_temp = st.checkbox("Temperatuur (°C)", value=True)
-show_wind = st.checkbox("Windkracht (Bft)")
-show_precip = st.checkbox("Neerslag (mm)")
+# Display the map in the first column
+with col1:
+    st_folium(nl_map, width=700)
 
-# Filter the data for the selected city
-df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
+# Display the graph in the second column
+with col2:
+    st.subheader("Weersverloop per uur")
 
-# Make sure to use the correct format for the time column to display hours on the x-axis
-df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
+    selected_city = st.selectbox("Selecteer een stad", cities)
+    show_temp = st.checkbox("Temperatuur (°C)", value=True)
+    show_wind = st.checkbox("Windkracht (Bft)")
+    show_precip = st.checkbox("Neerslag (mm)")
 
-fig, ax1 = plt.subplots(figsize=(10, 5))
+    df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
 
-# Plot Temperature if enabled
-if show_temp:
-    ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
-    ax1.set_ylabel("Temperatuur (°C)")  # Removed color to keep it default
-    ax1.tick_params(axis="y", labelcolor="black")  # Reset the y-axis ticks color to default
+    # Make sure to use the correct format for the time column to display hours on the x-axis
+    df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
 
-# Create second y-axis for wind and precipitation
-ax2 = ax1.twinx()
+    fig, ax1 = plt.subplots(figsize=(10, 5))
 
-# Plot Wind Strength in green if enabled
-if show_wind:
-    ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
+    # Plot Temperature if enabled
+    if show_temp:
+        ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
+        ax1.set_ylabel("Temperatuur (°C)")  # Removed color to keep it default
+        ax1.tick_params(axis="y", labelcolor="black")  # Reset the y-axis ticks color to default
 
-# Plot Precipitation in blue if enabled
-if show_precip:
-    ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue", linestyle="dotted")
+    # Create second y-axis for wind and precipitation
+    ax2 = ax1.twinx()
 
-# Set axis labels
-ax1.set_xlabel("Uur van de dag")
-ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
+    # Plot Wind Strength in green if enabled
+    if show_wind:
+        ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
 
-# Combine legends from both axes
-lines, labels = ax1.get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
+    # Plot Precipitation in blue if enabled
+    if show_precip:
+        ax2.plot(df_city["tijd"], df_city["neersl"], marker="^", label="Neerslag (mm)", color="blue", linestyle="dotted")
 
-# Rotate x-axis labels for better visibility (angle 45 degrees)
-ax1.tick_params(axis='x', rotation=45)
+    # Set axis labels
+    ax1.set_xlabel("Uur van de dag")
+    ax2.set_ylabel("Windkracht (Bft) / Neerslag (mm)")
 
-# Set reasonable min and max values for both y-axes
-ax1.set_ylim(min(df_city["temp"]) - 5, max(df_city["temp"]) + 5)  # Adjust the temperature y-axis range
-ax2.set_ylim(min(df_city["windknp"].min(), df_city["neersl"].min()) - 1, 
-             max(df_city["windknp"].max(), df_city["neersl"].max()) + 2)  # Adjust the wind/precipitation y-axis range
+    # Combine legends from both axes
+    lines, labels = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
-# Enable grid lines for clarity
-plt.grid(True, linestyle="--", alpha=0.5)
+    # Rotate x-axis labels for better visibility (angle 45 degrees)
+    ax1.tick_params(axis='x', rotation=45)
 
-# Ensure the plot is rendered properly in Streamlit
-st.pyplot(fig)
+    # Set reasonable min and max values for both y-axes
+    ax1.set_ylim(min(df_city["temp"]) - 5, max(df_city["temp"]) + 5)  # Adjust the temperature y-axis range
+    ax2.set_ylim(min(df_city["windknp"].min(), df_city["neersl"].min()) - 1, 
+                 max(df_city["windknp"].max(), df_city["neersl"].max()) + 2)  # Adjust the wind/precipitation y-axis range
+
+    # Enable grid lines for clarity
+    plt.grid(True, linestyle="--", alpha=0.5)
+
+    # Ensure the plot is rendered properly in Streamlit
+    st.pyplot(fig)
