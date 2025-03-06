@@ -156,15 +156,15 @@ fig, ax1 = plt.subplots(figsize=(10, 5))
 # Plot Temperature if enabled
 if show_temp:
     ax1.plot(df_city["tijd"], df_city["temp"], marker="o", label="Temperatuur (°C)", color="red")
-    ax1.set_ylabel("Temperatuur (°C)", color="red")
-    ax1.tick_params(axis="y", labelcolor="red")
+    ax1.set_ylabel("Temperatuur (°C)")  # Removed color to keep it default
+    ax1.tick_params(axis="y", labelcolor="black")  # Reset the y-axis ticks color to default
 
 # Create second y-axis for wind and precipitation
 ax2 = ax1.twinx()
 
 # Plot Wind Strength in green if enabled
 if show_wind:
-    ax2.plot(df_city["tijd"], df_city["windbft"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
+    ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
 
 # Plot Precipitation in blue if enabled
 if show_precip:
@@ -180,14 +180,20 @@ lines2, labels2 = ax2.get_legend_handles_labels()
 ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
 # Rotate x-axis labels for better visibility (angle 45 degrees)
-# Use ax1 directly to rotate x-ticks
 ax1.tick_params(axis='x', rotation=45)
+
+# Set reasonable min and max values for both y-axes
+# Adjust these ranges according to your data to fit the plot properly
+ax1.set_ylim(min(df_city["temp"]) - 5, max(df_city["temp"]) + 5)  # Adjust the temperature y-axis range
+ax2.set_ylim(min(df_city["windknp"].min(), df_city["neersl"].min()) - 1, 
+             max(df_city["windknp"].max(), df_city["neersl"].max()) + 2)  # Adjust the wind/precipitation y-axis range
 
 # Enable grid lines for clarity
 plt.grid(True, linestyle="--", alpha=0.5)
 
 # Ensure the plot is rendered properly in Streamlit
 st.pyplot(fig)
+
 
 
 
