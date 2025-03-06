@@ -178,7 +178,7 @@ with col2:
 
     # Plot Wind Strength in green if enabled
     if show_wind:
-        ax2.plot(df_city["tijd"], df_city["windknp"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
+        ax2.plot(df_city["tijd"], df_city["windbft"], marker="s", label="Windkracht (Bft)", color="green", linestyle="dashed")
 
     # Plot Precipitation in blue if enabled
     if show_precip:
