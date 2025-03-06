@@ -185,6 +185,7 @@ plt.xticks(rotation=45)
 # Enable grid lines for clarity
 plt.grid(True, linestyle="--", alpha=0.5)
 
-# Show the plot
+# Ensure the plot is rendered properly in Streamlit
 st.pyplot(fig)
+
 
