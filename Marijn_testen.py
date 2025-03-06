@@ -6,7 +6,7 @@ from streamlit_folium import st_folium  # Import this for Folium integration
 import folium
 from datetime import datetime
 
-# API Configuratie
+# API Configuratie gaat goed, niks meer aan doen
 api_key = 'd5184c3b4e'
 cities = [
     'Assen', 'Lelystad', 'Leeuwarden', 'Arnhem', 'Groningen', 'Maastricht', 
@@ -97,8 +97,8 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-# UI for selecting visualization type (Temperature, Precipitation, Weather)
-visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperature", "Precipitation", "Weather"])
+# Slider voor tijdsnotatie
+visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperature", "Weather", "Precipitation"])
 
 unieke_tijden = df_uur_verw["tijd"].dropna().unique()
 huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
@@ -106,13 +106,13 @@ if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
 selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
 
-# Map generation function
+# Function to create the map with selected data
 @st.cache_data
 def create_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
-    df_filtered = df[df["tijd"] == geselecteerde_uur]  # Filter based on selected hour
+    df_filtered = df[df["tijd"] == geselecteerde_uur]
 
-    for index, row in df.iterrows():  # Iterate over all data rows, not just filtered ones
+    for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weather":
             icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
             icon_path = f"iconen-weerlive/{icon_file}"
@@ -133,7 +133,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
             ).add_to(nl_map)
         
         elif visualisatie_optie == "Precipitation":
-            # Adding precipitation as a marker for all cities
+            # Adding precipitation as a marker
             folium.map.Marker(
                 location=[row["lat"], row["lon"]],
                 tooltip=row["plaats"],
@@ -147,3 +147,5 @@ nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
 
 # Display the map in Streamlit
 st_folium(nl_map, width=700)
+
+
