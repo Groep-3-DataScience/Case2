@@ -149,7 +149,7 @@ show_precip = st.checkbox("Neerslag (mm)")
 df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
 
 # Make sure to use the correct format for the time column to display hours on the x-axis
-df_city['tijd'] = df_city['tijd'].dt.strftime('%H)
+df_city['tijd'] = df_city['tijd'].dt.strftime('%H')
 
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
