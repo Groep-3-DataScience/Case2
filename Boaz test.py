@@ -1,24 +1,21 @@
-# Alle imports, alleen bovenaan toevoegen.
-
 import requests
 import pandas as pd
 import streamlit as st
 from folium.features import CustomIcon
-from streamlit_folium import st_folium  # Import this for Folium integration
+from streamlit_folium import st_folium
 import folium
 from datetime import datetime
 
+# Enable static serving for Streamlit
+st.set_page_config(page_title="Weerkaart Nederland", layout="wide")
+st.enableStaticServing = True
 
-
-#### API Configuratie gaat goed, niks meer aan doen ###
 api_key = 'd5184c3b4e'
 cities = [
     'Assen', 'Lelystad', 'Leeuwarden', 'Arnhem', 'Groningen', 'Maastricht', 
     'Eindhoven', 'Den Helder', 'Enschede', 'Amersfoort', 'Middelburg', 'Rotterdam'
 ]
 
-
-### Data ophalen en omzetten naar dataframes gaat ook goed, niks meer aan doen ###
 @st.cache_data
 def fetch_weather_data():
     liveweer, wk_verw, uur_verw, api_data = [], [], [], []
@@ -53,8 +50,6 @@ df_wk_verw = pd.DataFrame(wk_verw)
 df_uur_verw = pd.DataFrame(uur_verw)
 df_api_data = pd.DataFrame(api_data)
 
-
-### Data opschoning voor df_wk_verw, nieuwe kolommen toevoegen voor datum en tijd in de juiste notatie ###
 @st.cache_data
 def process_hourly_data(df):
     df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
@@ -65,7 +60,6 @@ def process_hourly_data(df):
 
 df_uur_verw = process_hourly_data(df_uur_verw)
 
-### Streamlit UI ###
 st.title("Weerkaart Nederland")
 
 weather_icons = {
@@ -103,8 +97,6 @@ city_coords = {
 df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
 df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
 
-### Slider met correcte tijdsnotatie en beginwaarde, hier moet nog een manier worden gevonden om de slider te laten beginnen op het huidige tijdstip, en eindigen op 23 uur later ###
-
 visualization_option = st.selectbox("Selecteer de visualisatie", ["Temperatuur", "Weer"])
 
 unieke_tijden = df_uur_verw["tijd"].dropna().unique()
@@ -113,13 +105,14 @@ if huidig_uur not in unieke_tijden:
     huidig_uur = unieke_tijden[0]
 selected_hour = st.select_slider("Selecteer het uur", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
 
+@st.cache_data
 def create_map(df, visualisatie_optie, geselecteerde_uur):
     nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
     df_filtered = df[df["tijd"] == geselecteerde_uur]
 
     for index, row in df_filtered.iterrows():
         if visualisatie_optie == "Weer":
-            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
+            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")
             icon_path = f"iconen-weerlive/{icon_file}"
             popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
             
@@ -136,7 +129,7 @@ def create_map(df, visualisatie_optie, geselecteerde_uur):
                 tooltip=row["plaats"],
                 icon=folium.DivIcon(html=f'<div style="color:red; font-weight:bold; font-size:18px;">{row["temp"]}°C</div>')
             ).add_to(nl_map)
-
+    
     return nl_map
 
 nl_map = create_map(df_uur_verw, visualization_option, selected_hour)
