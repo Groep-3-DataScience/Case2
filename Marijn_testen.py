@@ -182,29 +182,31 @@ if selected_cities:
     for city in selected_cities:
         city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-        # Plot temperature for each city
-        ax1.set_xlabel('Time')
-        ax1.set_ylabel('Temperature (°C)', color='tab:red')
-        ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
+        if visualization_option == "Temperature":
+            # Plot only the temperature for each city
+            ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
 
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Temperature (°C)', color='tab:red')
     ax1.tick_params(axis='y', labelcolor='tab:red')
 
     # Plot precipitation for each city on the same graph (only for valid precipitation values)
-    ax2 = ax1.twinx()
-    for city in selected_cities:
-        city_data = df_selected_cities[df_selected_cities['plaats'] == city]
+    if visualization_option == "Precipitation":
+        ax2 = ax1.twinx()
+        for city in selected_cities:
+            city_data = df_selected_cities[df_selected_cities['plaats'] == city]
 
-        # Filter out rows where precipitation is NaN or zero
-        city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
+            # Filter out rows where precipitation is NaN or zero
+            city_data = city_data[city_data['neersl'].notna() & (city_data['neersl'] > 0)]
 
-        if not city_data.empty:
-            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
+            if not city_data.empty:
+                ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
+                ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='--', marker='x')
 
-    ax2.tick_params(axis='y', labelcolor='tab:blue')
+        ax2.tick_params(axis='y', labelcolor='tab:blue')
 
     # Add title and show plot
-    plt.title(f"Temperature and Precipitation Comparison")
+    plt.title(f"{visualization_option} Comparison")
     fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
     plt.tight_layout()
     st.pyplot(fig)
