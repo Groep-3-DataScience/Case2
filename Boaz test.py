@@ -149,7 +149,7 @@ show_precip = st.checkbox("Neerslag (mm)")
 df_city = df_uur_verw[df_uur_verw["plaats"] == selected_city]
 
 # Make sure to use the correct format for the time column to display hours on the x-axis
-df_city['tijd'] = df_city['tijd'].dt.strftime('%H')
+df_city['tijd'] = df_city['tijd'].dt.strftime('%H:%M')
 
 fig, ax1 = plt.subplots(figsize=(10, 5))
 
@@ -179,7 +179,7 @@ lines, labels = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
 ax2.legend(lines + lines2, labels + labels2, loc="upper left", bbox_to_anchor=(1, 1))  # Adjust legend position
 
-# Rotate x-axis labels for better readability
+# Rotate x-axis labels for better visibility (angle 45 degrees)
 plt.xticks(rotation=45)
 
 # Enable grid lines for clarity
@@ -187,3 +187,4 @@ plt.grid(True, linestyle="--", alpha=0.5)
 
 # Show the plot
 st.pyplot(fig)
+
