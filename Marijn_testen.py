@@ -8,7 +8,8 @@ from streamlit_folium import folium_static  # Importeer folium_static
 df_cyclestations = pd.read_csv('cycle_stations.csv')
 
 # Converteer de installatiedatum van Unix timestamp (epoch) naar een leesbare datum (dd-mm-yyyy)
-df_cyclestations['installDate'] = pd.to_datetime(df_cyclestations['installDate'], unit='ms')
+# Controleer eerst of de installDate kolom bestaat en omgezet kan worden
+df_cyclestations['installDate'] = pd.to_datetime(df_cyclestations['installDate'], unit='ms', errors='coerce')
 
 # Streamlit layout
 st.title('London Cycle Stations')
@@ -31,7 +32,12 @@ for index, row in df_cyclestations.iterrows():
     nb_bikes = row['nbBikes']  # Aantal fietsen
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
     nb_ebikes = row['nbEBikes']  # Aantal ebikes
-    install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
+    
+    # Controleer of de installatiedatum beschikbaar is
+    if pd.notnull(row['installDate']):
+        install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
+    else:
+        install_date = "Onbekend"  # In geval van een ontbrekende datum
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
