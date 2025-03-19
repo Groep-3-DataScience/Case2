@@ -7,7 +7,7 @@ from streamlit_folium import folium_static  # Importeer folium_static
 # Laad de bestanden
 df_cyclestations = pd.read_csv('cycle_stations.csv')
 
-# Converteer de installatiedatum van Unix timestamp (epoch) naar een leesbare datum
+# Converteer de installatiedatum van Unix timestamp (epoch) naar een leesbare datum (dd-mm-yyyy)
 df_cyclestations['installDate'] = pd.to_datetime(df_cyclestations['installDate'], unit='ms')
 
 # Streamlit layout
@@ -31,13 +31,13 @@ for index, row in df_cyclestations.iterrows():
     nb_bikes = row['nbBikes']  # Aantal fietsen
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
     nb_ebikes = row['nbEBikes']  # Aantal ebikes
-    install_date = row['installDate']  # Installatiedatum
+    install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
         folium.Marker(
             location=[lat, long],
-            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}<br>Installatiedatum: {install_date.strftime('%Y-%m-%d')}", max_width=300),
+            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}<br>Installatiedatum: {install_date}", max_width=300),
             icon=folium.Icon(color='blue', icon='info-sign')
         ).add_to(marker_cluster)
 
