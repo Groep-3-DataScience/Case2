@@ -6,16 +6,17 @@ from streamlit_folium import folium_static  # Importeer folium_static
 
 # Laad de bestanden
 df_cyclestations = pd.read_csv('cycle_stations.csv')
+bestanden = ['2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
+fiets_data_jaar = pd.concat([pd.read_csv(file) for file in bestanden], ignore_index=True)
 
-# Converteer de installatiedatum van Unix timestamp (epoch) naar een leesbare datum (dd-mm-yyyy)
-# Controleer eerst of de installDate kolom bestaat en omgezet kan worden
-df_cyclestations['installDate'] = pd.to_datetime(df_cyclestations['installDate'], unit='ms', errors='coerce')
+# Weerdata en metrodata zijn geladen, maar niet nodig voor de map zelf.
+# We gaan nu een interactieve map maken met de fietsstations.
 
-# Streamlit layout
+# Create Streamlit app layout
 st.title('London Cycle Stations')
-st.markdown("Interaktive map voor fietsverhuurstations in Londen")
+st.markdown("Interaktive map met fietsverhuurstations in Londen")
 
-# Voeg een slider toe om het aantal beschikbare fietsen in te stellen
+# Voeg een slider toe om het aantal fietsen in te stellen
 bike_slider = st.slider("Selecteer het aantal beschikbare fietsen", 0, 100, 0)
 
 # Maak een basemap van Londen
@@ -31,20 +32,17 @@ for index, row in df_cyclestations.iterrows():
     station_name = row['name']
     nb_bikes = row['nbBikes']  # Aantal fietsen
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
-    nb_ebikes = row['nbEBikes']  # Aantal ebikes 
-        if pd.notnull(row['installDate']):
-        install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
-    else:
-        install_date = "Onbekend"  # In geval van een ontbrekende datum
-    
-    
-    # Zet de installatiedatum om naar een leesbare datum (dd-mm-yyyy
+    nb_ebikes = row['nbEBikes']  # Aantal ebikes
+    install_date_unix = row['installDate']  # Unix timestamp voor installDate
+
+    # Zet de Unix timestamp om naar een leesbare datum
+    install_date = pd.to_datetime(install_date_unix, unit='s').strftime('%d-%m-%Y')
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
         folium.Marker(
             location=[lat, long],
-            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}<br>Installatiedatum: {install_date}", max_width=300),
+            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}<br>Installatie datum: {install_date}", max_width=300),
             icon=folium.Icon(color='blue', icon='info-sign')
         ).add_to(marker_cluster)
 
