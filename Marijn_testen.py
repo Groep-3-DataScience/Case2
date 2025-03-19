@@ -33,16 +33,14 @@ for index, row in df_cyclestations.iterrows():
     nb_bikes = row['nbBikes']  # Aantal fietsen
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
     nb_ebikes = row['nbEBikes']  # Aantal ebikes
-    install_date_unix = row['installDate']  # Unix timestamp voor installDate
-
-    # Zet de Unix timestamp om naar een leesbare datum
-    install_date = pd.to_datetime(install_date_unix, unit='s').strftime('%d-%m-%Y')
+    install_date = row['installDateFormatted'] 
+    
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
         folium.Marker(
             location=[lat, long],
-            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}<br>Installatie datum: {install_date}", max_width=300),
+            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}", max_width=300),
             icon=folium.Icon(color='blue', icon='info-sign')
         ).add_to(marker_cluster)
 
