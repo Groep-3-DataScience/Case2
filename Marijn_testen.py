@@ -31,13 +31,14 @@ for index, row in df_cyclestations.iterrows():
     station_name = row['name']
     nb_bikes = row['nbBikes']  # Aantal fietsen
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
-    nb_ebikes = row['nbEBikes']  # Aantal ebikes
-    
-    # Zet de installatiedatum om naar een leesbare datum (dd-mm-yyyy)
-    if pd.notnull(row['installDate']):
+    nb_ebikes = row['nbEBikes']  # Aantal ebikes 
+        if pd.notnull(row['installDate']):
         install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
     else:
         install_date = "Onbekend"  # In geval van een ontbrekende datum
+    
+    
+    # Zet de installatiedatum om naar een leesbare datum (dd-mm-yyyy
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
