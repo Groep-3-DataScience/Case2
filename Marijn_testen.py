@@ -2,13 +2,14 @@ import pandas as pd
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+import streamlit as st
 
 # Data inladen
-bestanden = ['2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
+bestanden = ['/Users/marijn/Downloads/2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
 fiets_data_jaar = pd.concat([pd.read_csv(file) for file in bestanden], ignore_index=True)
 
 weer_data = pd.read_csv('weather_london.csv')
-metro_data = pd.read_csv('/Users/marijn/Downloads/AC2021_AnnualisedEntryExit.csv', sep=';')
+metro_data = pd.read_csv('AC2021_AnnualisedEntryExit.csv', sep=';')
 metro_stations_data = pd.read_csv('London stations.csv')
 
 # Coördinaten dictionary
