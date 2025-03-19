@@ -1,225 +1,79 @@
-import requests
 import pandas as pd
-import streamlit as st
-from folium.features import CustomIcon
-from streamlit_folium import st_folium  # Import this for Folium integration
 import folium
-import matplotlib.pyplot as plt  # For graphing
-from datetime import datetime
-import numpy as np
 
-# API Configuration
-api_key = 'd5184c3b4e'
-cities = [
-    'Assen', 'Lelystad', 'Leeuwarden', 'Arnhem', 'Groningen', 'Maastricht', 
-    'Eindhoven', 'Den Helder', 'Enschede', 'Amersfoort', 'Middelburg', 'Rotterdam'
+# Load the dataset
+df_londonstations = pd.read_csv('/Users/marijn/Downloads/London stations.csv')
+
+# List of stations you want to show
+stations_to_show = [
+    "Acton Town", "Aldgate", "Aldgate East", "Alperton", "Amersham", "Angel", "Archway", "Arnos Grove", "Arsenal",
+    "Baker Street", "Balham LU", "Bank and Monument", "Barbican", "Barking", "Barkingside", "Barons Court", "Bayswater",
+    "Becontree", "Belsize Park", "Bermondsey", "Bethnal Green LU", "Blackfriars LU", "Blackhorse Road", "Bond Street",
+    "Borough", "Boston Manor", "Bounds Green", "Bow Road", "Brent Cross", "Brixton LU", "Bromley-by-Bow", "Buckhurst Hill",
+    "Burnt Oak", "Caledonian Road", "Camden Town", "Canada Water", "Canary Wharf LU", "Canning Town", "Cannon Street LU",
+    "Canons Park", "Chalfont & Latimer", "Chalk Farm", "Chancery Lane", "Charing Cross LU", "Chesham", "Chigwell", "Chiswick Park",
+    "Chorleywood", "Clapham Common", "Clapham North", "Clapham South", "Cockfosters", "Colindale", "Colliers Wood", "Covent Garden",
+    "Croxley", "Dagenham East", "Dagenham Heathway", "Debden", "Dollis Hill", "Ealing Broadway", "Ealing Common", "Earl's Court",
+    "East Acton", "East Finchley", "East Ham", "East Putney", "Eastcote", "Edgware", "Edgware Road (Bak)", "Edgware Road (DIS)",
+    "Elephant & Castle LU", "Elm Park", "Embankment", "Epping", "Euston LU", "Euston Square", "Fairlop", "Farringdon", "Finchley Central",
+    "Finchley Road", "Finsbury Park", "Fulham Broadway", "Gants Hill", "Gloucester Road", "Golders Green", "Goldhawk Road", "Goodge Street",
+    "Grange Hill", "Great Portland Street", "Green Park", "Greenford", "Gunnersbury", "Hainault", "Hammersmith (DIS)", "Hammersmith (H&C)",
+    "Hampstead", "Hanger Lane", "Harlesden", "Harrow & Wealdstone", "Harrow-on-the-Hill", "Hatton Cross", "Heathrow Terminal 4 LU",
+    "Heathrow Terminal 5 LU", "Heathrow Terminals 123 LU", "Hendon Central", "High Barnet", "High Street Kensington", "Highbury & Islington",
+    "Highgate", "Hillingdon", "Holborn", "Holland Park", "Holloway Road", "Hornchurch", "Hounslow Central", "Hounslow East", "Hounslow West",
+    "Hyde Park Corner", "Ickenham", "Kennington", "Kensal Green", "Kensington (Olympia)", "Kentish Town", "Kenton", "Kew Gardens", "Kilburn",
+    "Kilburn Park", "King's Cross St. Pancras", "Kingsbury", "Knightsbridge", "Ladbroke Grove", "Lambeth North", "Lancaster Gate", "Latimer Road",
+    "Leicester Square", "Leyton", "Leytonstone", "Liverpool Street LU", "London Bridge LU", "Loughton", "Maida Vale", "Manor House",
+    "Mansion House", "Marble Arch", "Marylebone LU", "Mile End", "Mill Hill East", "Moor Park", "Moorgate", "Morden", "Mornington Crescent",
+    "Neasden", "Newbury Park", "North Acton", "North Ealing", "North Greenwich", "North Harrow", "North Wembley", "Northfields", "Northolt",
+    "Northwick Park", "Northwood", "Northwood Hills", "Notting Hill Gate", "Oakwood", "Old Street", "Osterley", "Oval", "Oxford Circus",
+    "Paddington TfL", "Park Royal", "Parsons Green", "Perivale", "Piccadilly Circus", "Pimlico", "Pinner", "Plaistow", "Preston Road",
+    "Putney Bridge", "Queen's Park", "Queensbury", "Queensway", "Ravenscourt Park", "Rayners Lane", "Redbridge", "Regent's Park", "Richmond",
+    "Rickmansworth", "Roding Valley", "Royal Oak", "Ruislip", "Ruislip Gardens", "Ruislip Manor", "Russell Square", "Seven Sisters",
+    "Shepherd's Bush LU", "Shepherd's Bush Market", "Sloane Square", "Snaresbrook", "South Ealing", "South Harrow", "South Kensington",
+    "South Kenton", "South Ruislip", "South Wimbledon", "South Woodford", "Southfields", "Southgate", "Southwark", "St. James's Park",
+    "St. John's Wood", "St. Paul's", "Stamford Brook", "Stanmore", "Stepney Green", "Stockwell", "Stonebridge Park", "Stratford", "Sudbury Hill",
+    "Sudbury Town", "Swiss Cottage", "Temple", "Theydon Bois", "Tooting Bec", "Tooting Broadway", "Tottenham Court Road", "Tottenham Hale LU",
+    "Totteridge & Whetstone", "Tower Hill", "Tufnell Park", "Turnham Green", "Turnpike Lane", "Upminster", "Upminster Bridge", "Upney",
+    "Upton Park", "Uxbridge", "Vauxhall LU", "Victoria LU", "Walthamstow Central", "Wanstead", "Warren Street", "Warwick Avenue", "Waterloo LU",
+    "Watford", "Wembley Central", "Wembley Park", "West Acton", "West Brompton", "West Finchley", "West Ham", "West Hampstead LU",
+    "West Harrow", "West Kensington", "West Ruislip", "Westbourne Park", "Westminster", "White City", "Whitechapel", "Willesden Green",
+    "Willesden Junction", "Wimbledon", "Wimbledon Park", "Wood Green", "Wood Lane", "Woodford", "Woodside Park", "Nine Elms", "Battersea Power Station",
+    "Acton Central", "Anerley", "Barking", "Battersea Park", "Bethnal Green LO", "Blackhorse Road", "Brockley", "Brondesbury", "Brondesbury Park",
+    "Bruce Grove", "Bush Hill Park", "Bushey", "Caledonian Road & Barnsbury", "Cambridge Heath", "Camden Road", "Canada Water", "Canonbury",
+    "Carpenders Park", "Cheshunt", "Chingford", "Clapham High Street", "Clapham Junction", "Clapton", "Crouch Hill", "Crystal Palace", "Dalston Junction",
+    "Dalston Kingsland", "Denmark Hill", "Edmonton Green", "Emerson Park", "Enfield Town", "Euston NR", "Finchley Road & Frognal", "Forest Hill",
+    "Gospel Oak", "Gunnersbury", "Hackney Central", "Hackney Downs", "Hackney Wick", "Haggerston", "Hampstead Heath", "Harlesden",
+    "Harringay Green Lanes", "Harrow & Wealdstone", "Hatch End", "Headstone Lane", "Highams Park", "Highbury & Islington", "Homerton", "Honor Oak Park",
+    "Hoxton", "Imperial Wharf", "Kensal Green", "Kensal Rise", "Kensington (Olympia)", "Kentish Town West", "Kenton", "Kew Gardens", "Kilburn High Road",
+    "Leyton Midland Road", "Leytonstone High Road", "Liverpool Street NR", "London Fields", "New Cross", "New Cross Gate", "North Wembley", "Norwood Junction",
+    "Peckham Rye", "Penge West", "Queen's Park", "Queens Road Peckham", "Rectory Road", "Richmond", "Romford", "Rotherhithe", "Seven Sisters", "Shadwell LO",
+    "Shepherd's Bush NR", "Shoreditch High Street", "Silver Street", "South Acton", "South Hampstead", "South Kenton", "South Tottenham", "Southbury",
+    "St James Street", "Stamford Hill", "Stoke Newington", "Stonebridge Park", "Stratford", "Surrey Quays", "Sydenham", "Theobalds Grove", "Turkey Street",
+    "Upminster", "Upper Holloway", "Walthamstow Central", "Walthamstow Queen's Road", "Wandsworth Road", "Wanstead Park", "Wapping", "Watford High Street",
+    "Watford Junction", "Wembley Central", "West Brompton", "West Croydon NR", "West Hampstead LO", "White Hart Lane", "Whitechapel", "Willesden Junction",
+    "Wood Street", "Woodgrange Park", "Abbey Road", "All Saints", "Bank and Monument", "Beckton", "Beckton Park", "Blackwall", "Bow Church", "Canary Wharf DLR",
+    "Canning Town", "Crossharbour", "Custom House", "Cutty Sark", "Cyprus", "Deptford Bridge", "Devons Road", "East India", "Elverson Road", "Gallions Reach",
+    "Greenwich", "Heron Quays", "Island Gardens", "King George V", "Langdon Park", "Lewisham DLR", "Limehouse DLR", "London City Airport", "Mudchute",
+    "Pontoon Dock", "Poplar", "Prince Regent", "Pudding Mill Lane", "Royal Albert", "Royal Victoria", "Shadwell DLR", "South Quay", "Star Lane", "Stratford",
+    "Stratford High Street", "Stratford International DLR", "Tower Gateway", "West Ham", "West India Quay", "West Silvertown", "Westferry", "Woolwich Arsenal",
+    "Acton Main Line", "Brentwood", "Burnham", "Chadwell Heath", "Ealing Broadway", "Forest Gate", "Gidea Park", "Goodmayes", "Hanwell", "Harold Wood",
+    "Hayes & Harlington", "Heathrow Terminal 4 EL", "Heathrow Terminal 5 EL", "Heathrow Terminals 2 & 3 EL", "Ilford", "Iver", "Langley", "Liverpool Street NR",
+    "Maidenhead", "Manor Park", "Maryland", "Paddington NR", "Reading", "Romford", "Seven Kings", "Shenfield", "Slough", "Southall", "Stratford", "Taplow",
+    "Twyford", "West Drayton", "West Ealing"
 ]
 
-# Fetch and transform weather data
-@st.cache_data
-def fetch_weather_data():
-    liveweer, wk_verw, uur_verw, api_data = [], [], [], []
-    
-    for city in cities:
-        api_url = f'https://weerlive.nl/api/weerlive_api_v2.php?key={api_key}&locatie={city}'
-        response = requests.get(api_url)
+# Filter the DataFrame to keep only the stations in the list
+df_filtered = df_londonstations[df_londonstations['Station'].isin(stations_to_show)]
 
-        if response.status_code == 200:
-            data = response.json()
-            if 'liveweer' in data:
-                liveweer.extend(data['liveweer'])
-            if 'wk_verw' in data:
-                for entry in data['wk_verw']:
-                    entry['plaats'] = city
-                wk_verw.extend(data['wk_verw'])
-            if 'uur_verw' in data:
-                for entry in data['uur_verw']:
-                    entry['plaats'] = city
-                uur_verw.extend(data['uur_verw'])
-            if 'api_data' in data:
-                api_data.extend(data['api'])
-        else:
-            print(f"Error fetching data for {city}: {response.status_code}")
-    
-    return liveweer, wk_verw, uur_verw, api_data
+# Create a map centered on London
+m = folium.Map(location=[51.5074, -0.1278], zoom_start=10)
 
-liveweer, wk_verw, uur_verw, api_data = fetch_weather_data()
+# Add markers for each station in the filtered DataFrame
+for index, row in df_filtered.iterrows():
+    folium.Marker(
+        location=[row['Latitude'], row['Longitude']],
+        popup=row['Station']
+    ).add_to(m)
 
-df_liveweer = pd.DataFrame(liveweer)
-df_wk_verw = pd.DataFrame(wk_verw)
-df_uur_verw = pd.DataFrame(uur_verw)
-df_api_data = pd.DataFrame(api_data)
-
-# Process hourly data
-@st.cache_data
-def process_hourly_data(df):
-    df['datetime'] = pd.to_datetime(df['timestamp'], unit='s')
-    df['datum'] = df['datetime'].dt.strftime('%d-%m-%Y')
-    df['tijd'] = df['datetime'].dt.strftime('%H:%M')
-    df['tijd'] = pd.to_datetime(df['tijd'], format='%H:%M', errors='coerce')
-    return df
-
-df_uur_verw = process_hourly_data(df_uur_verw)
-
-# Streamlit UI
-st.title("Weerkaart Nederland")
-
-weather_icons = {
-    "zonnig": "zonnig.png",
-    "bewolkt": "bewolkt.png",
-    "half bewolkt": "halfbewolkt.png",
-    "licht bewolkt": "halfbewolkt.png",
-    "regen": "regen.png",
-    "buien": "buien.png",
-    "mist": "mist.png",
-    "sneeuw": "sneeuw.png",
-    "onweer": "bliksem.png",
-    "hagel": "hagel.png",
-    "heldere nacht": "helderenacht.png",
-    "nachtmist": "nachtmist.png",
-    "wolkennacht": "wolkennacht.png",
-    "zwaar bewolkt": "zwaarbewolkt.png"
-}
-
-city_coords = {
-    "Assen": [52.9929, 6.5642],
-    "Lelystad": [52.5185, 5.4714],
-    "Leeuwarden": [53.2012, 5.7999],
-    "Arnhem": [51.9851, 5.8987],
-    "Groningen": [53.2194, 6.5665],
-    "Maastricht": [50.8514, 5.6910],
-    "Eindhoven": [51.4416, 5.4697],
-    "Den Helder": [52.9563, 4.7601],
-    "Enschede": [52.2215, 6.8937],
-    "Amersfoort": [52.1561, 5.3878],
-    "Middelburg": [51.4988, 3.6136],
-    "Rotterdam": [51.9225, 4.4792],
-}
-
-df_uur_verw["lat"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[0])
-df_uur_verw["lon"] = df_uur_verw["plaats"].map(lambda city: city_coords.get(city, [None, None])[1])
-
-# Map with all cities
-@st.cache_data
-def create_full_map(df, visualisatie_optie, geselecteerde_uur):
-    nl_map = folium.Map(location=[52.3, 5.3], zoom_start=8)
-    df_filtered = df[df["tijd"] == geselecteerde_uur]
-
-    for index, row in df_filtered.iterrows():
-        if visualisatie_optie == "Weather":
-            icon_file = weather_icons.get(row['image'].lower(), "bewolkt.png")  # Default icon
-            icon_path = f"iconen-weerlive/{icon_file}"
-            popup_text = f"{row['plaats']}: {row['temp']}°C, {row['image']}"
-            
-            folium.Marker(
-                location=[row["lat"], row["lon"]],
-                popup=popup_text,
-                tooltip=row["plaats"],
-                icon=CustomIcon(icon_path, icon_size=(30, 30))
-            ).add_to(nl_map)
-        
-        elif visualisatie_optie == "Temperature":
-            folium.map.Marker(
-                location=[row["lat"], row["lon"]],
-                tooltip=row["plaats"],
-                icon=folium.DivIcon(html=f'<div style="color:red; font-weight:bold; font-size:18px;">{row["temp"]}°C</div>')
-            ).add_to(nl_map)
-        
-        elif visualisatie_optie == "Precipitation":
-            # Adding precipitation as a marker
-            folium.map.Marker(
-                location=[row["lat"], row["lon"]],
-                tooltip=row["plaats"],
-                icon=folium.DivIcon(html=f'<div style="color:blue; font-weight:bold; font-size:18px;">{row["neersl"]} mm</div>')
-            ).add_to(nl_map)
-    
-    return nl_map
-
-# Streamlit: Select/Deselect All cities
-select_all = st.button("Select/Deselect All Cities")
-
-if select_all:
-    if 'all_selected' not in st.session_state:
-        st.session_state['all_selected'] = True
-    else:
-        st.session_state['all_selected'] = not st.session_state['all_selected']
-
-# Default all cities selected or deselected based on button press
-selected_cities = cities if st.session_state.get('all_selected', False) else []
-
-# Checkbox interface for cities
-for city in cities:
-    if city not in selected_cities:
-        selected_cities.append(city) if st.checkbox(city, value=False) else selected_cities
-
-# If no cities are selected for the graph, show a warning
-if not selected_cities:
-    st.warning("Select at least one city to view the weather graph.")
-
-# Filter the data for the selected cities
-df_selected_cities = df_uur_verw[df_uur_verw['plaats'].isin(selected_cities)]
-
-# Slider for time selection
-visualization_option = st.selectbox("Select visualization", ["Temperature", "Weather", "Precipitation"])
-
-unieke_tijden = df_selected_cities["tijd"].dropna().unique()
-huidig_uur = datetime.now().replace(minute=0, second=0, microsecond=0)
-if huidig_uur not in unieke_tijden:
-    huidig_uur = unieke_tijden[0]
-selected_hour = st.select_slider("Select hour", options=sorted(unieke_tijden), value=huidig_uur, format_func=lambda t: t.strftime('%H:%M'))
-
-# Create the map with all cities always displayed
-nl_map = create_full_map(df_uur_verw, visualization_option, selected_hour)
-
-# Display the map in Streamlit
-st_folium(nl_map, width=700)
-
-# Plot temperature and precipitation graphs based on selected visualization
-if selected_cities and visualization_option != "Weather":  # Only show graph if the option is not "Weather"
-    fig, ax1 = plt.subplots(figsize=(10, 5))
-
-    if visualization_option == "Temperature":
-        # Plot temperature for each city
-        for city in selected_cities:
-            city_data = df_selected_cities[df_selected_cities['plaats'] == city]
-
-            # Ensure time is sorted correctly
-            city_data = city_data.sort_values('tijd')
-
-            # Interpolation for missing temperature values (linear interpolation)
-            city_data['temp'] = city_data['temp'].interpolate(method='linear')
-
-            # Plot temperature for each city
-            ax1.set_xlabel('Time')
-            ax1.set_ylabel('Temperature (°C)', color='tab:red')
-            ax1.plot(city_data['tijd'], city_data['temp'], label=f'Temperature ({city})', linestyle='-', marker='o')
-
-        ax1.tick_params(axis='y', labelcolor='tab:red')
-
-    elif visualization_option == "Precipitation":
-        # Plot precipitation for each city (even if it's 0mm)
-        ax2 = ax1.twinx()
-        for city in selected_cities:
-            city_data = df_selected_cities[df_selected_cities['plaats'] == city]
-
-            # Ensure time is sorted correctly
-            city_data = city_data.sort_values('tijd')
-
-            # Interpolation for missing precipitation values (linear interpolation)
-            city_data['neersl'] = city_data['neersl'].interpolate(method='linear')
-
-            # If precipitation is zero for the entire day, make sure to plot a flat line at 0
-            if city_data['neersl'].isna().all():
-                city_data['neersl'] = 0  # If all values are NaN, set to 0 mm
-
-            # Plot precipitation for each city
-            ax2.set_ylabel('Precipitation (mm)', color='tab:blue')
-            ax2.plot(city_data['tijd'], city_data['neersl'], label=f'Precipitation ({city})', linestyle='-', marker='x')
-
-        ax2.tick_params(axis='y', labelcolor='tab:blue')
-
-    # Add title and show plot
-    plt.title(f"{visualization_option} Comparison")
-    fig.legend(loc='upper right', bbox_to_anchor=(1.1, 1), bbox_transform=ax1.transAxes)
-    plt.tight_layout()
-    st.pyplot(fig)
+m
