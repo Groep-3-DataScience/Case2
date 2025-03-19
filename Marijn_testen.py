@@ -3,6 +3,7 @@ import folium
 from folium.plugins import MarkerCluster
 import streamlit as st
 
+
 # Laad de bestanden
 df_cyclestations = pd.read_csv('cycle_stations.csv')
 bestanden = ['2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
