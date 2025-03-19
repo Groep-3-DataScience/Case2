@@ -1,18 +1,21 @@
+import requests
 import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
 import streamlit as st
-from streamlit_folium import folium_static  # Importeer folium_static
+from streamlit_folium import folium_static
 
-# Laad de bestanden
-df_cyclestations = pd.read_csv('cycle_stations.csv')
-bestanden = ['2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
-fiets_data_jaar = pd.concat([pd.read_csv(file) for file in bestanden], ignore_index=True)
+# Verkrijg live data van een API (voorbeeld voor een fietsverhuurservice)
+def get_live_data():
+    url = "https://api.tfl.gov.uk/bikepoint"
+    response = requests.get(url)
+    data = response.json()
+    return pd.json_normalize(data['bikePoints'])  # Zet de API response om naar een DataFrame
 
-# Weerdata en metrodata zijn geladen, maar niet nodig voor de map zelf.
-# We gaan nu een interactieve map maken met de fietsstations.
+# Verkrijg de live data
+df_cyclestations = get_live_data()
 
-# Create Streamlit app layout
+# Streamlit layout
 st.title('London Cycle Stations')
 st.markdown("Interaktive map met fietsverhuurstations in Londen")
 
@@ -29,16 +32,14 @@ marker_cluster = MarkerCluster().add_to(m)
 for index, row in df_cyclestations.iterrows():
     lat = row['lat']
     long = row['long']
-    station_name = row['name']
-    nb_bikes = row['nbBikes']  # Aantal fietsen
-    nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
-    nb_ebikes = row['nbEBikes']  # Aantal ebikes
+    station_name = row['commonName']
+    nb_bikes = row['availability.bikes']  # Aantal beschikbare fietsen van live data
 
     # Voeg een marker toe met info over het station
     if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
         folium.Marker(
             location=[lat, long],
-            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}", max_width=300),
+            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}", max_width=300),
             icon=folium.Icon(color='blue', icon='info-sign')
         ).add_to(marker_cluster)
 
