@@ -2,7 +2,7 @@ import pandas as pd
 import folium
 from folium.plugins import MarkerCluster
 import streamlit as st
-
+from streamlit_folium import folium_static  # Importeer folium_static
 
 # Laad de bestanden
 df_cyclestations = pd.read_csv('cycle_stations.csv')
@@ -44,4 +44,3 @@ for index, row in df_cyclestations.iterrows():
 
 # Render de kaart in de Streamlit app
 folium_static(m)
-
