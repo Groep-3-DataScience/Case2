@@ -33,7 +33,7 @@ for index, row in df_cyclestations.iterrows():
     nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
     nb_ebikes = row['nbEBikes']  # Aantal ebikes
     
-    # Controleer of de installatiedatum beschikbaar is
+    # Zet de installatiedatum om naar een leesbare datum (dd-mm-yyyy)
     if pd.notnull(row['installDate']):
         install_date = row['installDate'].strftime('%d-%m-%Y')  # Zet de installatiedatum om naar 'dd-mm-yyyy'
     else:
