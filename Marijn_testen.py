@@ -1,21 +1,46 @@
 import pandas as pd
 import folium
-from streamlit_folium import folium_static
+from folium.plugins import MarkerCluster
 import streamlit as st
 
-# Load the dataset for cycle stations
-df_cyclestations = pd.read_csv('/Users/marijn/Downloads/cycle_stations.csv')
+# Laad de bestanden
+df_cyclestations = pd.read_csv('cycle_stations.csv')
+bestanden = ['2021_Q2_Central.csv', '2021_Q3_Central.csv', '2021_Q4_Central.csv']
+fiets_data_jaar = pd.concat([pd.read_csv(file) for file in bestanden], ignore_index=True)
 
-# Initialize a map centered around London (You can adjust the latitude and longitude accordingly)
-m = folium.Map(location=[51.5074, -0.1278], zoom_start=12, tiles='CartoDB.Positron')
+# Weerdata en metrodata zijn geladen, maar niet nodig voor de map zelf.
+# We gaan nu een interactieve map maken met de fietsstations.
 
-# Add markers for each cycle station on the map
+# Create Streamlit app layout
+st.title('London Cycle Stations')
+st.markdown("Interaktive map met fietsverhuurstations in Londen")
+
+# Voeg een slider toe om het aantal fietsen in te stellen
+bike_slider = st.slider("Selecteer het aantal beschikbare fietsen", 0, 100, 0)
+
+# Maak een basemap van Londen
+m = folium.Map(location=[51.5074, -0.1278], zoom_start=12)
+
+# MarkerCluster om stations te groeperen
+marker_cluster = MarkerCluster().add_to(m)
+
+# Voeg de stations toe aan de kaart
 for index, row in df_cyclestations.iterrows():
-    folium.Marker(
-        location=[row['lat'], row['long']],
-        popup=f"Station: {row['name']}<br> Bikes Available: {row['nbBikes']}<br> EBikes: {row['nbEBikes']}",
-        tooltip=row['name']
-    ).add_to(m)
+    lat = row['lat']
+    long = row['long']
+    station_name = row['name']
+    nb_bikes = row['nbBikes']  # Aantal fietsen
+    nb_standard_bikes = row['nbStandardBikes']  # Aantal standaardfietsen
+    nb_ebikes = row['nbEBikes']  # Aantal ebikes
 
-# Display the map in Streamlit
+    # Voeg een marker toe met info over het station
+    if nb_bikes >= bike_slider:  # Controleer of het aantal fietsen groter of gelijk is aan de slider
+        folium.Marker(
+            location=[lat, long],
+            popup=folium.Popup(f"Station: {station_name}<br>Aantal fietsen: {nb_bikes}<br>Standaard: {nb_standard_bikes}<br>EBikes: {nb_ebikes}", max_width=300),
+            icon=folium.Icon(color='blue', icon='info-sign')
+        ).add_to(marker_cluster)
+
+# Render de kaart in de Streamlit app
 folium_static(m)
+
