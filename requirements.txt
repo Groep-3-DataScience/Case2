@@ -5,3 +5,5 @@ requests
 folium
 streamlit_folium
 datetime
+branca.colormap
+geopandas
